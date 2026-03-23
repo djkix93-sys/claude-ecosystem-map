@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>The Claude Ecosystem Map — The distil_AI_tion</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body, #root {
+      width: 100%;
+      height: 100%;
+      background-color: #06101f;
+      background-image:
+        linear-gradient(rgba(0,229,195,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,195,0.035) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 18 + ReactDOM 18 + Babel from CDN -->
+  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.9/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+const C = {
+  bg: "#06101f",
+  cyan: "#00e5c3",
+  amber: "#ff7b2c",
+  violet: "#b48fff",
+  dim: "rgba(255,255,255,0.72)",
+  dimmer: "rgba(255,255,255,0.35)",
+  border: "rgba(0,229,195,0.14)",
+};
+
+
+const css = `
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 0.45; }
+    50%     { opacity: 1; }
+  }
+  @keyframes glowPulse {
+    0%,100% { text-shadow: 0 0 24px rgba(0,229,195,0.5), 0 0 48px rgba(0,229,195,0.2); }
+    50%     { text-shadow: 0 0 36px rgba(0,229,195,0.9), 0 0 72px rgba(0,229,195,0.4); }
+  }
+  @keyframes scanline {
+    from { top: -80px; }
+    to   { top: 110vh; }
+  }
+  @keyframes blink {
+    0%,49% { opacity: 1; }
+    50%,100% { opacity: 0; }
+  }
+  @keyframes btnGlow {
+    0% { box-shadow: 0 0 0px rgba(0,229,195,0); }
+    50% { box-shadow: 0 0 28px rgba(0,229,195,0.7), 0 0 56px rgba(0,229,195,0.3); }
+    100% { box-shadow: 0 0 18px rgba(0,229,195,0.9), 0 0 36px rgba(0,229,195,0.5); }
+  }
+  @keyframes loginFadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.96); }
+  }
+  .au  { animation: fadeUp 0.5s ease forwards; opacity: 0; }
+  .ai  { animation: fadeIn 0.4s ease forwards; opacity: 0; }
+  .d0  { animation-delay: 0s; }
+  .d1  { animation-delay: 0.08s; }
+  .d2  { animation-delay: 0.18s; }
+  .d3  { animation-delay: 0.28s; }
+  .d4  { animation-delay: 0.38s; }
+  .d5  { animation-delay: 0.48s; }
+  .d6  { animation-delay: 0.58s; }
+  @keyframes eggFloat {
+    0%,100% { transform: translateY(0px); }
+    50%     { transform: translateY(-6px); }
+  }
+  @keyframes eggCrack {
+    0%   { transform: scale(1); filter: brightness(1); }
+    30%  { transform: scale(1.3); filter: brightness(2.5); }
+    50%  { transform: scale(0.9); filter: brightness(1.8); }
+    100% { transform: scale(1); filter: brightness(1); }
+  }
+  @keyframes holoIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.92); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes holoFlicker {
+    0%,100% { opacity: 0.92; }
+    50%     { opacity: 1; }
+    25%,75% { opacity: 0.88; }
+  }
+  @keyframes holoScanline {
+    from { top: -2px; }
+    to   { top: 100%; }
+  }
+`;
+
+const MODELS = [
+  { name: "Opus",   role: "Most capable\nMost expensive *",   color: C.violet },
+  { name: "Sonnet", role: "Balanced",                        color: C.cyan   },
+  { name: "Haiku",  role: "Fastest\nCheapest *",              color: C.amber  },
+];
+
+const HARNESSES = [
+  { name: "Thinking Dept", sub: "Claude.ai",   color: C.cyan,   desc: "Chat, artefacts, memory. Becoming more agentic every update." },
+  { name: "The Engineer",  sub: "Claude Code", color: C.amber,  desc: "Full local access. Files, commands, tools. /loop runs tasks until complete (session-bound, ~3 day limit)." },
+  { name: "Easy Agent",    sub: "Cowork",      color: C.violet, desc: "Point at a folder or import a chat Project. Goals in, work out. Scheduled tasks, Ideas tab, Customize tab for plugins." },
+];
+
+const SURFACES = [
+  {
+    name: "Desktop App",
+    color: C.cyan,
+    features: [
+      { label: "Chat + Projects",                     type: "main"  },
+      { label: "Memory",                              type: "main"  },
+      { label: "Artefacts",                           type: "teal"  },
+      { label: "Code (cloud)",                        type: "main"  },
+      { label: "Cowork",                              type: "violet"},
+      { label: "Plugins",                             type: "violet"},
+      { label: "Ideas",                               type: "violet"},
+      { label: "Dispatch → Cowork",                   type: "violet"},
+      { label: "Scheduled Tasks",                     type: "violet"},
+      { label: "Claude in Chrome",                    type: "main"  },
+      { label: "Skills",                              type: "dim"   },
+      { label: "Connectors / MCP",                    type: "orange"},
+      { label: "Styles",                              type: "orange"},
+      { label: "Research",                            type: "orange"},
+      { label: "Web Search",                          type: "orange"},
+    ],
+    note: "Most complete surface — highlights only",
+  },
+  {
+    name: "Mobile App",
+    sub: "from store",
+    color: C.amber,
+    features: [
+      { label: "Chat + Projects",   type: "main" },
+      { label: "Code (cloud)",      type: "main" },
+      { label: "Dispatch → Cowork", type: "main" },
+      { label: "Voice ✦",           type: "main" },
+      { label: "Artefacts",         type: "main" },
+      { label: "Styles",            type: "chat" },
+      { label: "Research",          type: "chat" },
+      { label: "Web Search",        type: "chat" },
+      { label: "Connectors / MCP",  type: "chat" },
+    ],
+    note: "Voice exclusive here",
+  },
+  {
+    name: "Mobile — APK",
+    color: C.amber,
+    features: [],
+    note: "Deprecated",
+    mirrorLayout: true,
+    mirrorLabel: "Mirrors the Web Browser App",
+    mirrorSub: "same core features · see next surface for full detail",
+  },
+  {
+    name: "Web Browser App / PWA",
+    color: C.violet,
+    features: [
+      { label: "Chat + Projects",  type: "main" },
+      { label: "Code (cloud)",     type: "main" },
+      { label: "Artefacts",        type: "main" },
+      { label: "Skills",           type: "dim"  },
+      { label: "Connectors / MCP", type: "chat" },
+      { label: "Research",         type: "chat" },
+      { label: "Web Search",       type: "chat" },
+    ],
+    note: "Skills + Connectors via Customize tab",
+  },
+  {
+    name: "Terminal",
+    color: C.cyan,
+    features: [
+      { label: "Full local Claude Code", type: "main" },
+      { label: "CLAUDE.md / Rules",      type: "main" },
+      { label: "/Commands",              type: "main" },
+      { label: "Hooks",                  type: "main" },
+      { label: "Sub-agents",             type: "main" },
+      { label: "Agent Teams",            type: "main" },
+      { label: "MCP + Plugins",          type: "chat" },
+      { label: "Claude in Chrome ↗",      type: "chat" },
+    ],
+    note: "Most capable and customisable",
+  },
+  {
+    name: "Claude in Chrome",
+    color: C.violet,
+    features: [
+      { label: "Sidebar chat",         type: "main" },
+      { label: "Shortcuts",             type: "main" },
+      { label: "Teach Mode",            type: "main" },
+      { label: "Tab Groups",            type: "main" },
+      { label: "Quick Mode (Haiku)",    type: "chat" },
+      { label: "Ask / Act modes",       type: "chat" },
+    ],
+    note: "Beta · Chromium browsers · no sensitive data",
+  },
+  {
+    name: "Microsoft Office",
+    color: C.amber,
+    features: [
+      { label: "Excel",                    type: "main" },
+      { label: "PowerPoint",               type: "main" },
+      { label: "Free web versions",        type: "main" },
+      { label: "Agent in sheet / doc",     type: "chat" },
+      { label: "Add-in sidebar",           type: "chat" },
+    ],
+    note: "Install as an add-in",
+  },
+  {
+    name: "Channels",
+    sub: "Telegram · Discord",
+    color: C.cyan,
+    features: [
+      { label: "Telegram Bot",             type: "main"  },
+      { label: "Discord Bot",              type: "main"  },
+      { label: "Push Notifications",       type: "main"  },
+      { label: "Voice-to-text input",      type: "chat"  },
+      { label: "Image support",            type: "chat"  },
+      { label: "MCP-based framework",      type: "dim"   },
+    ],
+    note: "Research preview · Claude Code sessions only",
+  },
+];
+
+const INSTRUCTIONS = [
+  {
+    surface: "Claude.ai",
+    color: C.cyan,
+    note: "Settings-based",
+    layers: ["Personal Preferences", "Project Instructions", "Per-chat context — files, uploads, links"],
+  },
+  {
+    surface: "Cowork",
+    color: C.violet,
+    note: "Needs configuring",
+    layers: ["Global Instructions", "Folder rules (manual)", "Plugin config via Customize tab"],
+  },
+  {
+    surface: "Claude Code",
+    color: C.amber,
+    note: "Most automatic",
+    layers: ["CLAUDE.md (auto-loads)", "Rules files (auto-load, progressive per path)", "MCP + repo context injections"],
+  },
+];
+
+// ── shared primitives ──────────────────────────────────────────────────────
+
+function LayerLabel({ num, title, color = C.cyan }) {
+  const layerStr = `LAYER ${String(num).padStart(2, "0")}`;
+  const [typedLayer, setTypedLayer] = useState("");
+  const [typedTitle, setTypedTitle] = useState("");
+
+  useEffect(() => {
+    setTypedLayer("");
+    setTypedTitle("");
+    let i = 0;
+    // Type layer string first
+    const typeLayer = () => {
+      if (i < layerStr.length) {
+        setTypedLayer(layerStr.slice(0, i + 1));
+        i++;
+        setTimeout(typeLayer, 70);
+      } else {
+        // Then type title
+        let j = 0;
+        const typeTitle = () => {
+          if (j < title.length) {
+            setTypedTitle(title.slice(0, j + 1));
+            j++;
+            setTimeout(typeTitle, 60);
+          }
+        };
+        setTimeout(typeTitle, 120);
+      }
+    };
+    setTimeout(typeLayer, 80);
+  }, [num, title]);
+
+  return (
+    <div style={{ textAlign: "center", marginBottom: 14 }}>
+      <div style={{ fontSize: 11, letterSpacing: "0.38em", color, opacity: 0.8, marginBottom: 5, minHeight: 16 }}>
+        {typedLayer}
+        {typedLayer.length < layerStr.length && (
+          <span style={{ animation: "blink 0.6s step-end infinite", marginLeft: 1 }}>|</span>
+        )}
+      </div>
+      <div style={{ fontSize: 18, letterSpacing: "0.22em", color, fontWeight: 800, minHeight: 26 }}>
+        {typedTitle}
+        {typedLayer.length === layerStr.length && typedTitle.length < title.length && (
+          <span style={{ animation: "blink 0.6s step-end infinite", marginLeft: 1 }}>|</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Node({ name, sub, color, delay = "d1", small = false }) {
+  return (
+    <div className={`au ${delay}`} style={{
+      background: `${color}0e`,
+      border: `1px solid ${color}35`,
+      borderRadius: 8,
+      padding: small ? "5px 8px" : "10px 12px",
+      textAlign: "center",
+      flex: 1,
+    }}>
+      <div style={{
+        fontSize: small ? 10 : 13,
+        fontWeight: 700,
+        color,
+        letterSpacing: "0.05em",
+        textShadow: `0 0 12px ${color}55`,
+      }}>
+        {name}
+      </div>
+      {sub && (
+        <div style={{ fontSize: 9, color: C.dim, marginTop: 3, letterSpacing: "0.07em" }}>
+          {sub}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Pill({ label, color, small = false }) {
+  return (
+    <div style={{
+      background: `${color}0c`,
+      border: `1px solid ${color}28`,
+      borderRadius: small ? 4 : 6,
+      padding: small ? "3px 7px" : "5px 10px",
+      fontSize: small ? 9 : 10,
+      color,
+      fontWeight: 600,
+      letterSpacing: "0.04em",
+      whiteSpace: "nowrap",
+    }}>
+      {label}
+    </div>
+  );
+}
+
+function Connector() {
+  return (
+    <div className="ai d2" style={{ display: "flex", justifyContent: "center", padding: "5px 0" }}>
+      <div style={{
+        width: 1,
+        height: 20,
+        background: `linear-gradient(${C.dim}90, ${C.dim}20)`,
+      }} />
+    </div>
+  );
+}
+
+// ── stage 0: intro ─────────────────────────────────────────────────────────
+
+function IntroStage({ onContinue }) {
+  return (
+    <div className="ai" style={{ textAlign: "center", width: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 18, marginBottom: 44 }}>
+        {[C.cyan, C.amber, C.violet].map((c, i) => (
+          <div key={i} style={{
+            width: 9, height: 9,
+            borderRadius: "50%",
+            background: c,
+            boxShadow: `0 0 14px ${c}, 0 0 28px ${c}55`,
+            animation: `pulse ${1.6 + i * 0.35}s ease infinite`,
+          }} />
+        ))}
+      </div>
+
+      <h1 style={{
+        fontSize: 30, fontWeight: 900, color: C.amber,
+        margin: "0 0 14px", lineHeight: 1.15, letterSpacing: "0.04em",
+        animation: "glowPulse 3.5s ease infinite",
+        textShadow: `0 0 28px ${C.amber}60, 0 0 56px ${C.amber}25`,
+      }}>
+        THE CLAUDE<br />ECOSYSTEM
+      </h1>
+
+      <div style={{
+        fontSize: 11, color: C.cyan, letterSpacing: "0.12em",
+        marginBottom: 52, opacity: 0.65,
+      }}>
+        Interactive Map — Mar 2026
+      </div>
+
+      <div
+        onClick={(e) => { e.stopPropagation(); onContinue(); }}
+        style={{
+          fontSize: 15, fontWeight: 900, color: "#fff",
+          letterSpacing: "0.22em",
+          animation: "pulse 2s ease infinite",
+          textShadow: `0 0 14px ${C.cyan}, 0 0 28px ${C.cyan}80`,
+          cursor: "pointer", padding: "14px 20px", display: "inline-block",
+        }}
+      >
+        TAP / CLICK TO BEGIN
+      </div>
+    </div>
+  );
+}
+
+// ── stage 1: models ────────────────────────────────────────────────────────
+
+function ModelsStage({ onContinue }) {
+  const [active, setActive] = useState(0);
+
+  const tapCenter = (e) => {
+    e.stopPropagation();
+    setActive(p => (p + 1) % MODELS.length);
+  };
+
+  return (
+    <div style={{ width: "100%", textAlign: "center" }}>
+      <div className="ai d0" style={{ marginBottom: 36 }}>
+        <LayerLabel num={1} title="THE INTELLIGENCE" />
+        <p style={{ fontSize: 12, color: C.dim, margin: "6px 0 0", letterSpacing: "0.06em" }}>
+          Three models.
+        </p>
+      </div>
+
+      {/* Carousel */}
+      <div style={{
+        position: "relative", height: 140,
+        width: "100%", perspective: "600px", marginBottom: 36,
+      }}>
+        {MODELS.map((m, i) => {
+          const offset = ((i - active) + MODELS.length) % MODELS.length;
+          const pos = offset === 0 ? 0 : offset === 1 ? 1 : -1;
+          const isCenter = pos === 0;
+          const translateX = pos * 115;
+          const translateZ = isCenter ? 0 : -90;
+          const scale = isCenter ? 1 : 0.72;
+          const opacity = isCenter ? 1 : 0.35;
+
+          return (
+            <div
+              key={m.name}
+              onClick={isCenter ? tapCenter : undefined}
+              style={{
+                position: "absolute", top: "50%", left: "50%",
+                width: 140, marginLeft: -70, marginTop: -60,
+                transform: `translateX(${translateX}px) translateZ(${translateZ}px) scale(${scale})`,
+                opacity,
+                transition: "transform 0.75s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.75s ease",
+                zIndex: isCenter ? 3 : 1,
+                cursor: isCenter ? "pointer" : "default",
+              }}
+            >
+              <div style={{
+                background: isCenter ? `${m.color}14` : `${m.color}06`,
+                border: `1px solid ${isCenter ? m.color + "60" : m.color + "22"}`,
+                borderRadius: 16, padding: "22px 16px",
+                boxShadow: isCenter ? `0 0 40px ${m.color}25, 0 0 80px ${m.color}10` : "none",
+                transition: "background 0.75s ease, border-color 0.75s ease, box-shadow 0.75s ease",
+              }}>
+                <div style={{
+                  fontSize: isCenter ? 22 : 16, fontWeight: 900, color: m.color,
+                  letterSpacing: "0.08em",
+                  textShadow: isCenter ? `0 0 20px ${m.color}80` : "none",
+                  transition: "font-size 0.75s ease, text-shadow 0.75s ease",
+                  marginBottom: 8,
+                }}>
+                  {m.name}
+                </div>
+                <div style={{
+                  fontSize: 10, color: isCenter ? C.dim : "transparent",
+                  letterSpacing: "0.1em", transition: "color 0.75s ease",
+                  textAlign: "center", whiteSpace: "pre-line", lineHeight: 1.7,
+                }}>
+                  {m.role}
+                </div>
+                {isCenter && (
+                  <div style={{
+                    marginTop: 10, fontSize: 8, color: m.color + "80",
+                    letterSpacing: "0.2em", animation: "pulse 2s ease infinite",
+                  }}>
+                    TAP / CLICK TO ROTATE
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Dots + arrows + hint */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 32 }}>
+        {/* Left chevron */}
+        <svg width="12" height="20" viewBox="0 0 12 20" fill="none" style={{ opacity: 0.7 }}>
+          <polyline
+            points="9,3 3,10 9,17"
+            stroke={MODELS[active].color}
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ filter: `drop-shadow(0 0 4px ${MODELS[active].color})` }}
+          />
+        </svg>
+
+        {/* Dots */}
+        <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+          {MODELS.map((_, i) => (
+            <div key={i} style={{
+              width: i === active ? 18 : 5, height: 5, borderRadius: 3,
+              background: i === active ? MODELS[active].color : "rgba(255,255,255,0.15)",
+              boxShadow: i === active ? `0 0 8px ${MODELS[active].color}` : "none",
+              transition: "all 0.5s ease",
+            }} />
+          ))}
+        </div>
+
+        {/* Right chevron */}
+        <svg width="12" height="20" viewBox="0 0 12 20" fill="none" style={{ opacity: 0.7 }}>
+          <polyline
+            points="3,3 9,10 3,17"
+            stroke={MODELS[active].color}
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ filter: `drop-shadow(0 0 4px ${MODELS[active].color})` }}
+          />
+        </svg>
+      </div>
+
+      <div className="au d4" style={{
+        padding: "14px 16px", border: `1px solid ${C.border}`,
+        borderRadius: 10, fontSize: 11, color: C.dim,
+        letterSpacing: "0.05em", lineHeight: 1.75,
+      }}>
+        Three levels of intelligence. Every product.<br />
+        What changes is what it's{" "}
+        <span style={{ color: C.cyan, fontWeight: 700 }}>allowed to do</span>.
+      </div>
+
+      <div style={{ marginTop: 14, fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "0.08em", fontStyle: "italic", textAlign: "center" }}>
+        * token cost will vary
+      </div>
+
+      {/* Tap to continue */}
+      <div
+        onClick={(e) => { e.stopPropagation(); onContinue(); }}
+        style={{
+          marginTop: 28, fontSize: 15, fontWeight: 900, color: "#fff",
+          letterSpacing: "0.22em", cursor: "pointer",
+          animation: "pulse 2s ease infinite",
+          textShadow: `0 0 14px ${C.cyan}, 0 0 28px ${C.cyan}80`,
+          padding: "14px 0", textAlign: "center",
+        }}
+      >
+        TAP / CLICK TO CONTINUE
+      </div>
+    </div>
+  );
+}
+
+// ── stage 2: harnesses ─────────────────────────────────────────────────────
+
+function HarnessesStage({ onContinue }) {
+  const [active, setActive] = useState(0);
+
+  const tapAdvance = (e) => {
+    e.stopPropagation();
+    setActive(p => (p + 1) % HARNESSES.length);
+  };
+
+  return (
+    <div style={{ width: "100%", textAlign: "center" }}>
+      <div className="ai d0" style={{ marginBottom: 24 }}>
+        <LayerLabel num={2} title="THE HARNESSES" />
+        <p style={{ fontSize: 12, color: C.dim, margin: "4px 0 0", letterSpacing: "0.04em", lineHeight: 1.6 }}>
+          Same models. Different permissions.<br />
+          Different behaviours.
+        </p>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {HARNESSES.map((h, i) => {
+          const isActive = i === active;
+          return (
+            <div
+              key={h.name}
+              onClick={isActive ? tapAdvance : (e) => { e.stopPropagation(); setActive(i); }}
+              style={{
+                background: `${h.color}${isActive ? "14" : "08"}`,
+                border: `1px solid ${h.color}${isActive ? "70" : "30"}`,
+                borderRadius: 10,
+                padding: isActive ? "16px 16px" : "12px 16px",
+                textAlign: "left",
+                transition: "all 0.6s ease",
+                boxShadow: isActive ? `0 0 24px ${h.color}25, 0 0 48px ${h.color}10` : "none",
+                cursor: "pointer",
+              }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isActive ? 10 : 4 }}>
+                <div style={{
+                  fontSize: isActive ? 15 : 13,
+                  fontWeight: 900, color: h.color,
+                  letterSpacing: "0.06em",
+                  textShadow: isActive ? `0 0 16px ${h.color}70` : "none",
+                  transition: "font-size 0.5s ease, text-shadow 0.5s ease",
+                }}>
+                  {h.name}
+                </div>
+                <div style={{
+                  fontSize: 11, color: "#fff",
+                  fontWeight: 800, letterSpacing: "0.1em",
+                  background: `${h.color}28`,
+                  border: `1px solid ${h.color}60`,
+                  borderRadius: 5, padding: "4px 10px",
+                  textShadow: `0 0 10px ${h.color}, 0 0 20px ${h.color}70`,
+                  boxShadow: `0 0 8px ${h.color}40`,
+                  transition: "all 0.5s ease",
+                }}>
+                  {h.sub}
+                </div>
+              </div>
+              <div style={{
+                fontSize: 12, color: isActive ? C.dim : "transparent",
+                lineHeight: 1.65, letterSpacing: "0.03em",
+                maxHeight: isActive ? "80px" : "0px",
+                overflow: "hidden",
+                transition: "max-height 0.6s ease, color 0.5s ease",
+              }}>
+                {h.desc}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Up/down arrows + dots + hint */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 16 }}>
+        {/* Up chevron */}
+        <svg
+          width="20" height="12" viewBox="0 0 20 12" fill="none"
+          onClick={(e) => { e.stopPropagation(); setActive(p => (p - 1 + HARNESSES.length) % HARNESSES.length); }}
+          style={{ cursor: "pointer", opacity: 0.75 }}
+        >
+          <polyline
+            points="3,9 10,3 17,9"
+            stroke={HARNESSES[active].color} strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round"
+            style={{ filter: `drop-shadow(0 0 4px ${HARNESSES[active].color})` }}
+          />
+        </svg>
+
+        {/* Dots */}
+        <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+          {HARNESSES.map((h, i) => (
+            <div
+              key={i}
+              onClick={(e) => { e.stopPropagation(); setActive(i); }}
+              style={{
+                width: i === active ? 18 : 5, height: 5, borderRadius: 3,
+                background: i === active ? h.color : "rgba(255,255,255,0.15)",
+                boxShadow: i === active ? `0 0 8px ${h.color}80` : "none",
+                transition: "all 0.5s ease", cursor: "pointer",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Down chevron */}
+        <svg
+          width="20" height="12" viewBox="0 0 20 12" fill="none"
+          onClick={(e) => { e.stopPropagation(); setActive(p => (p + 1) % HARNESSES.length); }}
+          style={{ cursor: "pointer", opacity: 0.75 }}
+        >
+          <polyline
+            points="3,3 10,9 17,3"
+            stroke={HARNESSES[active].color} strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round"
+            style={{ filter: `drop-shadow(0 0 4px ${HARNESSES[active].color})` }}
+          />
+        </svg>
+      </div>
+
+      {/* Hint */}
+      <div style={{
+        marginTop: 6, fontSize: 8,
+        color: HARNESSES[active].color, opacity: 0.6,
+        letterSpacing: "0.22em", transition: "color 0.5s ease",
+      }}>
+        TAP / CLICK TO SELECT
+      </div>
+
+      <div
+        onClick={(e) => { e.stopPropagation(); onContinue(); }}
+        style={{
+          marginTop: 28, fontSize: 15, fontWeight: 900, color: "#fff",
+          letterSpacing: "0.22em", cursor: "pointer",
+          animation: "pulse 2s ease infinite",
+          textShadow: `0 0 14px ${C.cyan}, 0 0 28px ${C.cyan}80`,
+          padding: "14px 0",
+        }}
+      >
+        TAP / CLICK TO CONTINUE
+      </div>
+    </div>
+  );
+}
+
+// ── stage 3: surfaces ──────────────────────────────────────────────────────
+
+const SURFACE_CARDS = [
+  {
+    name: "Desktop App",
+    label: "Mac · Windows",
+    color: C.cyan,
+    desc: "The most complete surface. The only place you can run Cowork. Claude Desktop can also control Claude in Chrome for browser automation.",
+  },
+  {
+    name: "Mobile — Play Store / App Store",
+    label: "Android · iOS",
+    color: C.amber,
+    desc: "Optimised for mobile use — not full features, but the right ones. Voice read-aloud is exclusive here. Dispatch lets your phone remote-control Cowork on your desktop.",
+  },
+  {
+    name: "Mobile — APK",
+    label: "Deprecated · existing installs",
+    color: C.amber,
+    desc: "The original mobile app — still updated but no longer available to new users. Mirrors the Web Browser App with the same core capability set.",
+  },
+  {
+    name: "Web Browser App / PWA",
+    label: "Browser shortcut",
+    color: C.violet,
+    desc: "Same core chat features as the desktop. Chat, Projects, Code tab — without any install.",
+    combined: true,
+    combinedNote: "The APK and Web App share the same capability set. Different form factor, same ground.",
+  },
+  {
+    name: "Terminal",
+    label: "VS Code · any CLI",
+    color: C.cyan,
+    desc: "More control, more customisability. Build almost any digital experience — automate, integrate, orchestrate. You configure it, you own what it does.",
+  },
+  {
+    name: "Claude in Chrome",
+    label: "Chrome extension",
+    color: C.violet,
+    desc: "Sidebar in Chrome and Chromium browsers (inc. Brave). Teach Mode lets you narrate and click through a workflow — Claude watches and saves it as a repeatable Shortcut. Tab Groups enable multi-site workflows. Beta: no sensitive data.",
+  },
+  {
+    name: "Microsoft Office",
+    label: "Excel · PowerPoint",
+    color: C.amber,
+    desc: "Add-in sidebar inside Excel and PowerPoint — including the free web versions. Works as an agent inside a sheet or deck. Useful for fine-tuning, building, and automating directly inside these apps.",
+  },
+  {
+    name: "Channels (Telegram / Discord)",
+    label: "Messaging · MCP framework",
+    color: C.cyan,
+    desc: "Message a bot on Telegram or Discord and your input lands in a running Claude Code session — same tools, same files, same context. Push notifications when Claude finishes. Architecture designed for community expansion.",
+  },
+];
+
+function SurfacesStage({ onContinue }) {
+  const [active, setActive] = useState(0);
+
+  // Each surface is its own card — no combined cards
+  const cards = [
+    SURFACE_CARDS[0], // Desktop App
+    SURFACE_CARDS[4], // Terminal
+    SURFACE_CARDS[1], // Mobile — Play Store / App Store
+    SURFACE_CARDS[2], // Mobile — APK
+    SURFACE_CARDS[3], // Web Browser App / PWA
+    SURFACE_CARDS[5], // Claude in Chrome
+    SURFACE_CARDS[6], // Microsoft Office
+    SURFACE_CARDS[7], // Channels
+  ];
+  const N = cards.length;
+
+  const tapCenter = (e) => {
+    e.stopPropagation();
+    setActive(p => (p + 1) % N);
+  };
+
+  const activeColor = cards[active].color;
+
+  return (
+    <div style={{ width: "100%" }}>
+      <div className="ai d0" style={{ textAlign: "center", marginBottom: 20 }}>
+        <LayerLabel num={3} title="THE SURFACES" />
+        <p style={{ fontSize: 11, color: C.dim, margin: "3px 0 0", letterSpacing: "0.04em", lineHeight: 1.6, textAlign: "center" }}>
+          Where you access the harnesses.<br />
+          <span style={{ opacity: 0.7, fontSize: 10 }}>Some features overlap — what differs is depth, access, and who each is built for.</span>
+        </p>
+      </div>
+
+      {/* Vertical carousel — same pattern as ModelsStage but vertical */}
+      <div style={{
+        position: "relative",
+        height: 240,
+        width: "100%",
+        marginBottom: 20,
+      }}>
+        {cards.map((s, i) => {
+          const offset = ((i - active) + N) % N;
+          // pos: 0=center, 1=below, -1=above, null=hidden
+          const pos = offset === 0 ? 0
+            : offset === 1 ? 1
+            : offset === N - 1 ? -1
+            : null;
+
+          if (pos === null) return null; // hide cards not in prev/center/next
+
+          const isCenter = pos === 0;
+          const translateY = pos * 120;
+          const scale = isCenter ? 1 : 0.75;
+          const opacity = isCenter ? 1 : 0.3;
+
+          return (
+            <div
+              key={s.name}
+              onClick={isCenter ? tapCenter : (e) => {
+                e.stopPropagation();
+                // Tap prev/next to jump there
+                setActive(i);
+              }}
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                width: "88%",
+                maxWidth: 370,
+                transform: `translate(-50%, -50%) translateY(${translateY}px) scale(${scale})`,
+                opacity,
+                transition: "transform 0.75s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.75s ease",
+                zIndex: isCenter ? 3 : 1,
+                cursor: "pointer",
+                pointerEvents: "auto",
+              }}
+            >
+              <div style={{
+                background: isCenter ? `${s.color}12` : `${s.color}06`,
+                border: `1px solid ${isCenter ? s.color + "55" : s.color + "22"}`,
+                borderRadius: 12,
+                padding: isCenter ? "14px 16px" : "10px 14px",
+                boxShadow: isCenter ? `0 0 30px ${s.color}20, 0 0 60px ${s.color}08` : "none",
+                transition: "background 0.75s ease, border-color 0.75s ease, box-shadow 0.75s ease, padding 0.75s ease",
+              }}>
+                {/* Header row */}
+                <div style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  marginBottom: isCenter ? 8 : 0,
+                }}>
+                  <div style={{
+                    fontSize: isCenter ? 14 : 11, fontWeight: 800, color: s.color,
+                    letterSpacing: "0.05em",
+                    textShadow: isCenter ? `0 0 14px ${s.color}70` : "none",
+                    lineHeight: 1.3, flex: 1,
+                    transition: "font-size 0.75s ease, text-shadow 0.75s ease",
+                  }}>
+                    {s.name}
+                  </div>
+                  <div style={{
+                    fontSize: 8, color: s.color,
+                    opacity: isCenter ? 0.65 : 0.35,
+                    letterSpacing: "0.1em", fontWeight: 600,
+                    background: `${s.color}${isCenter ? "18" : "0c"}`, borderRadius: 4,
+                    padding: "3px 7px", marginLeft: 8, whiteSpace: "nowrap", flexShrink: 0,
+                    transition: "opacity 0.75s ease",
+                  }}>
+                    {s.label}
+                  </div>
+                </div>
+
+                {/* Description — only visible on active */}
+                <div style={{
+                  fontSize: 11,
+                  color: isCenter ? C.dim : "transparent",
+                  lineHeight: 1.6, letterSpacing: "0.03em",
+                  maxHeight: isCenter ? 120 : 0,
+                  overflow: "hidden",
+                  transition: "max-height 0.75s ease, color 0.75s ease",
+                }}>
+                  {s.desc}
+                </div>
+
+                {/* Rotate hint on active */}
+                {isCenter && (
+                  <div style={{
+                    marginTop: 8, fontSize: 8, color: s.color + "80",
+                    letterSpacing: "0.2em", animation: "pulse 2s ease infinite",
+                    textAlign: "center",
+                  }}>
+                    TAP / CLICK TO ROTATE
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Up/Down arrows + dots */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 8 }}>
+        {/* Up chevron */}
+        <svg
+          width="20" height="12" viewBox="0 0 20 12" fill="none"
+          onClick={(e) => { e.stopPropagation(); setActive(p => (p - 1 + N) % N); }}
+          style={{ cursor: "pointer", opacity: 0.7 }}
+        >
+          <polyline
+            points="3,9 10,3 17,9"
+            stroke={activeColor} strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round"
+            style={{ filter: `drop-shadow(0 0 4px ${activeColor})` }}
+          />
+        </svg>
+
+        {/* Dots */}
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {cards.map((s, i) => (
+            <div
+              key={i}
+              onClick={(e) => { e.stopPropagation(); setActive(i); }}
+              style={{
+                width: i === active ? 18 : 5, height: 5, borderRadius: 3,
+                background: i === active ? s.color : "rgba(255,255,255,0.15)",
+                boxShadow: i === active ? `0 0 8px ${s.color}` : "none",
+                transition: "all 0.5s ease", cursor: "pointer",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Down chevron */}
+        <svg
+          width="20" height="12" viewBox="0 0 20 12" fill="none"
+          onClick={(e) => { e.stopPropagation(); setActive(p => (p + 1) % N); }}
+          style={{ cursor: "pointer", opacity: 0.7 }}
+        >
+          <polyline
+            points="3,3 10,9 17,3"
+            stroke={activeColor} strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round"
+            style={{ filter: `drop-shadow(0 0 4px ${activeColor})` }}
+          />
+        </svg>
+      </div>
+
+      <div
+        onClick={(e) => { e.stopPropagation(); onContinue(); }}
+        style={{
+          marginTop: 16, fontSize: 15, fontWeight: 900, color: "#fff",
+          letterSpacing: "0.22em", cursor: "pointer",
+          animation: "pulse 2s ease infinite",
+          textShadow: `0 0 14px ${C.cyan}, 0 0 28px ${C.cyan}80`,
+          padding: "10px 0", textAlign: "center",
+        }}
+      >
+        TAP / CLICK TO CONTINUE
+      </div>
+    </div>
+  );
+}
+
+// ── styles easter egg ─────────────────────────────────────────────────────
+
+function StylesEasterEgg() {
+  const [cracked, setCracked] = useState(false);
+  const [showHolo, setShowHolo] = useState(false);
+  const [cracking, setCracking] = useState(false);
+
+  const handleTap = (e) => {
+    e.stopPropagation();
+    if (showHolo) return;
+    if (!cracked) {
+      setCracking(true);
+      setTimeout(() => {
+        setCracking(false);
+        setCracked(true);
+        setShowHolo(true);
+      }, 500);
+    } else {
+      setShowHolo(true);
+    }
+  };
+
+  const closeHolo = (e) => {
+    e.stopPropagation();
+    setShowHolo(false);
+  };
+
+  return (
+    <>
+      {/* Hologram overlay */}
+      {showHolo && (
+        <div
+          onClick={closeHolo}
+          style={{
+            position: "fixed", inset: 0, zIndex: 100,
+            background: "rgba(6,16,31,0.75)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            animation: "fadeIn 0.3s ease",
+            backdropFilter: "blur(4px)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: 320, width: "90%",
+              background: `linear-gradient(135deg, ${C.cyan}12 0%, ${C.violet}0a 50%, ${C.amber}08 100%)`,
+              border: `1px solid ${C.cyan}50`,
+              borderRadius: 14,
+              padding: "20px 18px",
+              position: "relative",
+              overflow: "hidden",
+              animation: "holoIn 0.4s ease forwards",
+              boxShadow: `0 0 40px ${C.cyan}25, 0 0 80px ${C.cyan}10, inset 0 0 30px ${C.cyan}08`,
+            }}
+          >
+            {/* Hologram scanline */}
+            <div style={{
+              position: "absolute", left: 0, right: 0, height: 1,
+              background: `linear-gradient(90deg, transparent, ${C.cyan}40, transparent)`,
+              animation: "holoScanline 2.5s linear infinite",
+              pointerEvents: "none",
+            }} />
+            {/* Header */}
+            <div style={{
+              fontSize: 8, letterSpacing: "0.4em", color: C.amber,
+              marginBottom: 10, opacity: 0.7,
+              animation: "holoFlicker 3s ease infinite",
+            }}>
+              HIDDEN CAPABILITY
+            </div>
+            <div style={{
+              fontSize: 14, fontWeight: 800, color: C.cyan,
+              letterSpacing: "0.08em", marginBottom: 12,
+              textShadow: `0 0 14px ${C.cyan}70`,
+            }}>
+              Styles Isn't Just Formatting
+            </div>
+            {/* Body */}
+            <div style={{
+              fontSize: 11, color: C.dim, lineHeight: 1.7,
+              letterSpacing: "0.03em",
+            }}>
+              You can define sets of skills to trigger inside a custom Style.
+              Toggle it on and Claude chains those skills when responding.
+            </div>
+            <div style={{
+              marginTop: 12,
+              background: `${C.violet}10`,
+              border: `1px solid ${C.violet}30`,
+              borderRadius: 8,
+              padding: "10px 12px",
+              fontSize: 10, color: C.violet,
+              fontFamily: "'Courier New', monospace",
+              letterSpacing: "0.02em",
+              lineHeight: 1.7,
+            }}>
+              Add this instruction:<br />
+              <span style={{ color: "#fff", fontWeight: 600 }}>
+                "Use view tool on mnt/skills/user/&#123;skill&#125;/SKILL.md"
+              </span>
+              <br />
+              Add more than one + other instructions.
+            </div>
+            {/* Tap to close hint */}
+            <div style={{
+              marginTop: 14, fontSize: 8, color: C.dimmer,
+              letterSpacing: "0.2em", textAlign: "center",
+            }}>
+              TAP / CLICK ANYWHERE TO CLOSE
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* The egg orb — sits at bottom of content */}
+      <div
+        onClick={handleTap}
+        style={{
+          display: "flex", flexDirection: "column",
+          alignItems: "center", gap: 5,
+          cursor: "pointer",
+          marginTop: 12,
+          animation: cracking ? "eggCrack 0.5s ease" : "eggFloat 3s ease infinite",
+        }}
+      >
+        <div style={{
+          width: cracked ? 22 : 18,
+          height: cracked ? 22 : 18,
+          borderRadius: "50%",
+          background: cracked
+            ? `radial-gradient(circle at 35% 35%, ${C.amber}dd, ${C.amber}60 60%, ${C.violet}40 100%)`
+            : `radial-gradient(circle at 35% 35%, ${C.amber}90, ${C.amber}40 70%, transparent 100%)`,
+          boxShadow: cracked
+            ? `0 0 16px ${C.amber}80, 0 0 32px ${C.amber}30, 0 0 6px ${C.violet}40`
+            : `0 0 12px ${C.amber}50, 0 0 24px ${C.amber}20`,
+          transition: "all 0.4s ease",
+          position: "relative",
+        }}>
+          {/* Crack lines when cracked */}
+          {cracked && (
+            <svg width="22" height="22" viewBox="0 0 22 22" style={{ position: "absolute", top: 0, left: 0 }}>
+              <line x1="8" y1="3" x2="11" y2="10" stroke={`${C.cyan}90`} strokeWidth="0.8" />
+              <line x1="11" y1="10" x2="8" y2="14" stroke={`${C.cyan}90`} strokeWidth="0.8" />
+              <line x1="11" y1="10" x2="15" y2="13" stroke={`${C.cyan}70`} strokeWidth="0.6" />
+            </svg>
+          )}
+        </div>
+        <div style={{
+          fontSize: 7, letterSpacing: "0.2em",
+          color: cracked ? C.amber : C.dimmer,
+          transition: "color 0.4s ease",
+        }}>
+          {cracked ? "TAP / CLICK TO REOPEN" : "?"}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── stage 4: features (cycling) ────────────────────────────────────────────
+
+function FeaturesStage({ surface, idx, total, onNext, onContinue }) {
+  const [activeChip, setActiveChip] = useState(0);
+  const [revealed, setRevealed] = useState(new Set([0]));
+  const [orbX, setOrbX] = useState(0);
+  const [orbY, setOrbY] = useState(0);
+  const [typedName, setTypedName] = useState("");
+  const chipRefs = useRef([]);
+  const containerRef = useRef(null);
+
+  // Typewriter for surface name on each new surface
+  useEffect(() => {
+    setTypedName("");
+    let i = 0;
+    const type = () => {
+      if (i < surface.name.length) {
+        setTypedName(surface.name.slice(0, i + 1));
+        i++;
+        setTimeout(type, 55);
+      }
+    };
+    setTimeout(type, 60);
+  }, [surface.name]);
+
+  useEffect(() => {
+    setActiveChip(0);
+    setRevealed(new Set([0])); // first chip visible on load
+    chipRefs.current = [];
+  }, [surface.name]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveChip(prev => {
+        const next = (prev + 1) % surface.features.length;
+        setRevealed(r => { const s = new Set(r); s.add(next); return s; });
+        return next;
+      });
+    }, 900);
+    return () => clearInterval(interval);
+  }, [surface.features.length]);
+
+  // Position orb over chip 0 immediately on surface change, after render
+  useEffect(() => {
+    let raf = requestAnimationFrame(() => {
+      const chip = chipRefs.current[0];
+      const container = containerRef.current;
+      if (chip && container) {
+        const chipRect = chip.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        setOrbX(chipRect.left - containerRect.left + chipRect.width / 2);
+        setOrbY(chipRect.top - containerRect.top + chipRect.height / 2);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [surface.name]);
+
+  useEffect(() => {
+    const chip = chipRefs.current[activeChip];
+    const container = containerRef.current;
+    if (chip && container) {
+      const chipRect = chip.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      setOrbX(chipRect.left - containerRect.left + chipRect.width / 2);
+      setOrbY(chipRect.top - containerRect.top + chipRect.height / 2);
+    }
+  }, [activeChip]);
+
+  return (
+    <div key={surface.name} style={{ width: "100%" }}>
+      {/* Surface counter */}
+      <div className="ai" style={{ textAlign: "center", marginBottom: 16 }}>
+        <div style={{ fontSize: 9, letterSpacing: "0.35em", color: C.dim, marginBottom: 8 }}>
+          SURFACE {idx + 1} / {total}
+        </div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 6 }}>
+          {SURFACES.map((_, i) => (
+            <div key={i} style={{
+              width: i === idx ? 22 : 6, height: 5, borderRadius: 3,
+              background: i === idx ? surface.color
+                : i < idx ? `${surface.color}40`
+                : "rgba(255,255,255,0.1)",
+              transition: "all 0.3s ease",
+              boxShadow: i === idx ? `0 0 8px ${surface.color}80` : "none",
+            }} />
+          ))}
+        </div>
+      </div>
+
+      {/* Surface name */}
+      <div className="au d1" style={{ textAlign: "center", marginBottom: 14 }}>
+        <h2 style={{
+          fontSize: 22, fontWeight: 900, color: surface.color,
+          margin: 0, letterSpacing: "0.06em",
+          textShadow: `0 0 24px ${surface.color}70`,
+        }}>
+          {typedName}
+          {typedName.length < surface.name.length && (
+            <span style={{ animation: "blink 0.6s step-end infinite", opacity: 1 }}>|</span>
+          )}
+        </h2>
+        {surface.sub && (
+          <div style={{ fontSize: 10, color: surface.color, opacity: 0.5, marginTop: 3, letterSpacing: "0.18em" }}>
+            {surface.sub}
+          </div>
+        )}
+        <div style={{ fontSize: 10, color: C.dim, marginTop: 4, letterSpacing: "0.18em" }}>
+          {surface.note}
+        </div>
+      </div>
+
+      {/* KEY FUNCTIONS label */}
+      <div className="au d2" style={{
+        fontSize: 13, letterSpacing: "0.22em", color: "rgba(255,255,255,0.75)",
+        fontWeight: 800, textAlign: "center", marginBottom: 14,
+      }}>
+        KEY FUNCTIONS
+      </div>
+
+      {/* Mirror layout (APK) or standard orb+chips */}
+      {surface.mirrorLayout ? (
+        <div className="au d2" style={{
+          textAlign: "center",
+          marginBottom: 14,
+          padding: "32px 20px",
+          background: `${surface.color}08`,
+          border: `1px solid ${surface.color}25`,
+          borderRadius: 12,
+          position: "relative",
+          overflow: "hidden",
+        }}>
+          {/* Pulsating amber orb centred */}
+          <div style={{
+            position: "absolute",
+            left: "50%", top: "50%",
+            width: 120, height: 120,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${surface.color}40 0%, ${surface.color}15 50%, transparent 75%)`,
+            transform: "translate(-50%, -50%)",
+            filter: "blur(8px)",
+            animation: "pulse 2.5s ease-in-out infinite",
+            pointerEvents: "none",
+            zIndex: 0,
+          }} />
+          <div style={{
+            fontSize: 18, fontWeight: 800, color: surface.color,
+            letterSpacing: "0.04em", lineHeight: 1.3,
+            textShadow: `0 0 18px ${surface.color}60`,
+            marginBottom: 10, position: "relative", zIndex: 1,
+          }}>
+            {surface.mirrorLabel}
+          </div>
+          <div style={{
+            fontSize: 10, color: C.dimmer,
+            letterSpacing: "0.12em", fontStyle: "italic",
+            lineHeight: 1.6, position: "relative", zIndex: 1,
+          }}>
+            {surface.mirrorSub}
+          </div>
+        </div>
+      ) : (
+        /* Standard chips with scanning orb */
+        <div
+          ref={containerRef}
+          style={{ position: "relative", marginBottom: 14 }}
+        >
+          {/* Orb */}
+          <div style={{
+            position: "absolute",
+            left: orbX,
+            top: orbY,
+            width: 100, height: 100,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${surface.color}30 0%, ${surface.color}10 50%, transparent 75%)`,
+            transform: "translate(-50%, -50%)",
+            transition: "left 0.45s cubic-bezier(0.4, 0, 0.2, 1), top 0.45s cubic-bezier(0.4, 0, 0.2, 1)",
+            pointerEvents: "none",
+            zIndex: 2,
+            filter: `blur(6px)`,
+            boxShadow: `0 0 30px ${surface.color}30, 0 0 60px ${surface.color}12`,
+            opacity: 0.85,
+          }} />
+
+          {/* Chips */}
+          <div style={{
+            display: "flex", flexWrap: "wrap", gap: 8,
+            justifyContent: "center", position: "relative", zIndex: 3,
+          }}>
+            {surface.features.map((f, i) => {
+              const isActive = i === activeChip;
+              const label  = typeof f === "object" ? f.label : f;
+              const type   = typeof f === "object" ? f.type  : "main";
+              const key    = typeof f === "object" ? f.label : f;
+
+              const isSub    = type === "sub";
+              const isDim    = type === "dim";
+              const isChat   = type === "chat";
+              const isTeal   = type === "teal";
+              const isViolet = type === "violet";
+              const isOrange = type === "orange";
+
+              const chipColor = isOrange ? C.amber : isViolet ? C.violet : isTeal ? C.cyan : isChat ? C.violet : isDim ? C.amber : surface.color;
+              const fontSize  = isSub ? 9 : isChat || isDim ? 10 : 12;
+              const padV      = isSub ? "4px" : "7px";
+              const padH      = isSub ? "10px" : "15px";
+
+              const isRevealed = revealed.has(i);
+
+              return (
+                <div
+                  key={key}
+                  ref={el => chipRefs.current[i] = el}
+                  style={{
+                    background: isActive ? `${chipColor}1c` : isRevealed ? `${chipColor}08` : "transparent",
+                    border: `1px solid ${isActive ? chipColor + "70" : isRevealed ? chipColor + "22" : chipColor + "15"}`,
+                    borderRadius: 20,
+                    padding: `${padV} ${padH}`,
+                    fontSize,
+                    color: isActive ? "#fff" : isRevealed ? chipColor + (isSub ? "60" : "99") : "transparent",
+                    fontWeight: isActive ? 600 : 500,
+                    letterSpacing: isSub ? "0.04em" : "0.05em",
+                    fontStyle: isSub ? "italic" : "normal",
+                    transition: "background 0.8s ease, border-color 0.8s ease, color 0.8s ease, box-shadow 0.8s ease, transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease",
+                    boxShadow: isActive ? `0 0 10px ${chipColor}30` : "none",
+                    textShadow: isActive ? `0 0 8px ${chipColor}50` : "none",
+                    transform: isRevealed ? "scale(1)" : "scale(0.3)",
+                    opacity: isRevealed ? 1 : 0.2,
+                  }}
+                >
+                  {label}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Styles easter egg — Desktop App only */}
+      {surface.name === "Desktop App" && (
+        <StylesEasterEgg />
+      )}
+
+      <div className="au d5" style={{
+        textAlign: "center", fontSize: 9,
+        color: C.dimmer, letterSpacing: "0.12em",
+        marginBottom: 18, fontStyle: "italic",
+      }}>
+        not exhaustive — features change with each update
+      </div>
+
+      {/* Hint */}
+      <div
+        onClick={(e) => { e.stopPropagation(); idx < total - 1 ? onNext() : onContinue(); }}
+        className="ai d6"
+        style={{
+          textAlign: "center", fontSize: 15, fontWeight: 900,
+          color: "#fff", letterSpacing: "0.22em",
+          animation: "pulse 2s ease infinite",
+          textShadow: `0 0 14px ${C.cyan}, 0 0 28px ${C.cyan}80`,
+          cursor: "pointer", padding: "14px 0",
+        }}
+      >
+        {idx < total - 1 ? "TAP / CLICK → NEXT SURFACE" : "TAP / CLICK TO CONTINUE"}
+      </div>
+    </div>
+  );
+}
+
+// ── stage 5: instructions ──────────────────────────────────────────────────
+
+function InstructionsStage({ onContinue }) {
+  const [openIdx, setOpenIdx] = useState(null);
+  const [typedTitle, setTypedTitle] = useState("");
+  const [typedSub, setTypedSub] = useState("");
+
+  const title = "INSTRUCTION HIERARCHY";
+  const sub   = "HOW YOU CONTROL BEHAVIOUR";
+
+  useEffect(() => {
+    setTypedSub(""); setTypedTitle("");
+    let i = 0;
+    const typeSub = () => {
+      if (i < sub.length) { setTypedSub(sub.slice(0, i + 1)); i++; setTimeout(typeSub, 55); }
+      else { let j = 0; const typeTitle = () => {
+        if (j < title.length) { setTypedTitle(title.slice(0, j + 1)); j++; setTimeout(typeTitle, 48); }
+      }; setTimeout(typeTitle, 100); }
+    };
+    setTimeout(typeSub, 80);
+  }, []);
+
+  return (
+    <div style={{ width: "100%" }}>
+      <div className="ai d0" style={{ textAlign: "center", marginBottom: 22 }}>
+        <div style={{ fontSize: 9, letterSpacing: "0.38em", color: C.cyan, opacity: 0.6, marginBottom: 6, minHeight: 14 }}>
+          {typedSub}
+          {typedSub.length < sub.length && <span style={{ animation: "blink 0.6s step-end infinite" }}>|</span>}
+        </div>
+        <h2 style={{ fontSize: 16, fontWeight: 900, color: "#fff", margin: 0, letterSpacing: "0.1em", minHeight: 22 }}>
+          {typedTitle}
+          {typedSub.length === sub.length && typedTitle.length < title.length && (
+            <span style={{ animation: "blink 0.6s step-end infinite" }}>|</span>
+          )}
+        </h2>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {INSTRUCTIONS.map((item, i) => {
+          const isOpen = openIdx === i;
+          return (
+            <div
+              key={item.surface}
+              onClick={(e) => { e.stopPropagation(); setOpenIdx(isOpen ? null : i); }}
+              className={`au d${i + 1}`}
+              style={{
+                background: `${item.color}${isOpen ? "10" : "06"}`,
+                border: `1px solid ${item.color}${isOpen ? "55" : "22"}`,
+                borderRadius: 10,
+                padding: "12px 14px",
+                cursor: "pointer",
+                transition: "all 0.4s ease",
+                boxShadow: isOpen ? `0 0 16px ${item.color}18` : "none",
+              }}
+            >
+              {/* Header row — always visible */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{
+                  fontSize: 13, fontWeight: 700, color: item.color,
+                  letterSpacing: "0.07em",
+                  textShadow: isOpen ? `0 0 10px ${item.color}50` : "none",
+                  transition: "text-shadow 0.3s ease",
+                }}>
+                  {item.surface}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 9, color: C.dimmer, letterSpacing: "0.12em" }}>
+                    {item.note}
+                  </div>
+                  {/* Down/up chevron */}
+                  <svg width="14" height="9" viewBox="0 0 14 9" fill="none" style={{
+                    transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.35s ease",
+                    flexShrink: 0,
+                  }}>
+                    <polyline
+                      points="1,1 7,7 13,1"
+                      stroke={item.color} strokeWidth="1.8"
+                      strokeLinecap="round" strokeLinejoin="round"
+                      style={{ filter: `drop-shadow(0 0 3px ${item.color}80)` }}
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Layers — visible only when open */}
+              <div style={{
+                maxHeight: isOpen ? "200px" : "0px",
+                overflow: "hidden",
+                transition: "max-height 0.45s ease",
+              }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: isOpen ? 10 : 0 }}>
+                  {item.layers.map((layer, j) => (
+                    <div key={layer} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <div style={{
+                        width: 4, height: 4, borderRadius: "50%",
+                        background: item.color,
+                        opacity: 1 - j * 0.22, flexShrink: 0,
+                        boxShadow: j === 0 ? `0 0 6px ${item.color}` : "none",
+                      }} />
+                      <div style={{
+                        fontSize: 11,
+                        color: j === 0 ? "#fff" : C.dim,
+                        letterSpacing: "0.04em",
+                      }}>
+                        {layer}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div
+        onClick={(e) => { e.stopPropagation(); onContinue(); }}
+        style={{
+          marginTop: 28, fontSize: 15, fontWeight: 900, color: "#fff",
+          letterSpacing: "0.22em", cursor: "pointer",
+          animation: "pulse 2s ease infinite",
+          textShadow: `0 0 14px ${C.cyan}, 0 0 28px ${C.cyan}80`,
+          padding: "14px 0", textAlign: "center",
+        }}
+      >
+        TAP / CLICK TO CONTINUE
+      </div>
+    </div>
+  );
+}
+
+function CompleteStage() {
+  return (
+    <div style={{ width: "100%", textAlign: "center" }}>
+      <div className="ai d0" style={{ marginBottom: 22 }}>
+        <div style={{ fontSize: 9, letterSpacing: "0.38em", color: C.cyan, opacity: 0.55, marginBottom: 8 }}>
+          THE MAP IS COMPLETE
+        </div>
+        <h2 style={{
+          fontSize: 20, fontWeight: 900, color: "#fff",
+          margin: 0, letterSpacing: "0.06em",
+          animation: "glowPulse 4s ease infinite",
+        }}>
+          THREE LAYERS.<br />ONE ECOSYSTEM.
+        </h2>
+      </div>
+
+      {/* Full architecture */}
+      <div style={{ marginBottom: 20 }}>
+
+        {/* Layer 1 — Surfaces (top) */}
+        <div className="au d1" style={{ marginBottom: 6 }}>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.55)", letterSpacing: "0.3em", fontWeight: 700, marginBottom: 4, textAlign: "center" }}>
+            SURFACES
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              fontSize: 38, fontWeight: 900, color: C.cyan,
+              lineHeight: 1, flexShrink: 0, width: 28, textAlign: "center",
+              textShadow: `0 0 12px ${C.cyan}80`,
+            }}>1</div>
+            <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center" }}>
+              {SURFACES.map(s => <Pill key={s.name} label={s.name} color={s.color} small />)}
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="ai d1" style={{
+          height: 1, margin: "6px 0",
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
+        }} />
+
+        {/* Layer 2 — Harnesses */}
+        <div className="au d2" style={{ marginBottom: 6 }}>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.55)", letterSpacing: "0.3em", fontWeight: 700, marginBottom: 4, textAlign: "center" }}>
+            HARNESSES
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              fontSize: 38, fontWeight: 900, color: C.amber,
+              lineHeight: 1, flexShrink: 0, width: 28, textAlign: "center",
+              textShadow: `0 0 12px ${C.amber}80`,
+            }}>2</div>
+            <div style={{ flex: 1, display: "flex", gap: 5, justifyContent: "center" }}>
+              {HARNESSES.map(h => (
+                <div key={h.name} style={{
+                  flex: 1, background: `${h.color}0c`, border: `1px solid ${h.color}28`,
+                  borderRadius: 5, padding: "5px 8px", fontSize: 9, color: h.color,
+                  fontWeight: 600, textAlign: "center",
+                }}>
+                  {h.sub}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="ai d2" style={{
+          height: 1, margin: "6px 0",
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
+        }} />
+
+        {/* Layer 3 — Models (bottom) */}
+        <div className="au d3">
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.55)", letterSpacing: "0.3em", fontWeight: 700, marginBottom: 4, textAlign: "center" }}>
+            MODELS
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              fontSize: 38, fontWeight: 900, color: C.violet,
+              lineHeight: 1, flexShrink: 0, width: 28, textAlign: "center",
+              textShadow: `0 0 12px ${C.violet}80`,
+            }}>3</div>
+            <div style={{ flex: 1, display: "flex", gap: 5, justifyContent: "center" }}>
+              {MODELS.map(m => (
+                <div key={m.name} style={{
+                  flex: 1, background: `${m.color}0c`, border: `1px solid ${m.color}28`,
+                  borderRadius: 5, padding: "5px 8px", fontSize: 9, color: m.color,
+                  fontWeight: 600, textAlign: "center",
+                }}>
+                  {m.name}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Closing thought */}
+      <div className="au d4" style={{
+        padding: "13px 16px",
+        border: `1px solid ${C.border}`,
+        borderRadius: 10,
+        fontSize: 11, color: C.dim,
+        letterSpacing: "0.05em", lineHeight: 1.75, marginBottom: 18,
+      }}>
+        The question is never "which Claude."<br />
+        It's which{" "}
+        <span style={{ color: C.cyan, fontWeight: 700 }}>harness</span>
+        {" "}and which{" "}
+        <span style={{ color: C.amber, fontWeight: 700 }}>surface</span>.
+      </div>
+
+      {/* Logout */}
+      <div
+        onClick={(e) => { e.stopPropagation(); if (typeof window !== "undefined") window.__onLogout && window.__onLogout(); }}
+        style={{
+          marginTop: 28,
+          border: `1px solid ${C.cyan}`,
+          borderRadius: 6, padding: "13px 28px",
+          fontSize: 11, color: C.cyan,
+          fontWeight: 700,
+          letterSpacing: "0.28em", cursor: "pointer",
+          fontFamily: "'Courier New', monospace",
+          transition: "all 0.3s ease",
+          display: "inline-block",
+          animation: "pulse 2s ease infinite",
+          textShadow: `0 0 10px ${C.cyan}90, 0 0 20px ${C.cyan}40`,
+          boxShadow: `0 0 14px ${C.cyan}40`,
+        }}
+      >
+        LOG OUT
+      </div>
+    </div>
+  );
+}
+
+// ── logout page ────────────────────────────────────────────────────────────
+
+function LogoutPage({ onRestart }) {
+  return (
+    <div style={{
+      position: "absolute", inset: 0,
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+    }}>
+      <MatrixCanvas />
+
+      {/* Same header as login */}
+      <div style={{ textAlign: "center", marginBottom: 48, position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 9, letterSpacing: "0.45em", color: C.cyan, opacity: 0.5, marginBottom: 12 }}>
+          THE DISTIL_AI_TION
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: "0.08em", textShadow: `0 0 24px ${C.cyan}50` }}>
+          VAULT ACCESS
+        </div>
+        <div style={{ width: 40, height: 1, background: `linear-gradient(90deg, transparent, ${C.cyan}80, transparent)`, margin: "14px auto 0" }} />
+      </div>
+
+      {/* Large circular reload button */}
+      <div
+        onClick={onRestart}
+        style={{
+          position: "relative", zIndex: 1,
+          width: 160, height: 160,
+          borderRadius: "50%",
+          border: `2px solid ${C.cyan}60`,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          cursor: "pointer",
+          background: `radial-gradient(circle, ${C.cyan}0e 0%, transparent 70%)`,
+          boxShadow: `0 0 40px ${C.cyan}20, 0 0 80px ${C.cyan}08`,
+          transition: "all 0.3s ease",
+          animation: "glowPulse 3s ease infinite",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = `radial-gradient(circle, ${C.cyan}20 0%, transparent 70%)`; e.currentTarget.style.borderColor = C.cyan; }}
+        onMouseLeave={e => { e.currentTarget.style.background = `radial-gradient(circle, ${C.cyan}0e 0%, transparent 70%)`; e.currentTarget.style.borderColor = `${C.cyan}60`; }}
+      >
+        {/* Reload icon */}
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style={{ marginBottom: 10 }}>
+          <path
+            d="M6 18 A12 12 0 1 1 18 30"
+            stroke={C.cyan} strokeWidth="2.5" strokeLinecap="round" fill="none"
+            style={{ filter: `drop-shadow(0 0 4px ${C.cyan})` }}
+          />
+          <polyline
+            points="6,24 6,18 12,18"
+            stroke={C.cyan} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"
+            style={{ filter: `drop-shadow(0 0 4px ${C.cyan})` }}
+          />
+        </svg>
+        <div style={{
+          fontSize: 9, color: C.cyan, letterSpacing: "0.22em",
+          fontWeight: 700, textShadow: `0 0 8px ${C.cyan}`,
+        }}>
+          RELOAD
+        </div>
+      </div>
+
+      <div style={{
+        position: "relative", zIndex: 1,
+        marginTop: 32, fontSize: 8, color: C.dimmer,
+        letterSpacing: "0.18em",
+      }}>
+        TAP / CLICK TO RESTART THE MAP
+      </div>
+    </div>
+  );
+}
+
+// ── login stage ────────────────────────────────────────────────────────────
+
+const PASSWORD = "the distil_AI_tion";
+
+function MatrixCanvas() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let raf;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    // 3D nodes with z depth — dense subtle field
+    const N = 160;
+    const nodes = Array.from({ length: N }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      z: Math.random(),              // 0=far, 1=near
+      vx: (Math.random() - 0.5) * 0.00018,
+      vy: (Math.random() - 0.5) * 0.00018,
+      vz: (Math.random() - 0.5) * 0.0001,
+      r: Math.random() * 0.8 + 0.3,
+      glow: Math.random() > 0.85,
+      phase: Math.random() * Math.PI * 2,
+    }));
+
+    const project = (node, w, h) => {
+      // Perspective projection — near nodes appear larger and brighter
+      const fov = 1.8;
+      const scale = fov / (fov + (1 - node.z) * 1.2);
+      const px = (node.x - 0.5) * scale * w + w / 2;
+      const py = (node.y - 0.5) * scale * h + h / 2;
+      return { px, py, scale };
+    };
+
+    const draw = (t) => {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Update positions
+      nodes.forEach(n => {
+        n.x += n.vx;
+        n.y += n.vy;
+        n.z += n.vz;
+        if (n.x < 0 || n.x > 1) n.vx *= -1;
+        if (n.y < 0 || n.y > 1) n.vy *= -1;
+        if (n.z < 0 || n.z > 1) n.vz *= -1;
+      });
+
+      // Sort back to front for correct rendering
+      const sorted = [...nodes].sort((a, b) => a.z - b.z);
+
+      const LINK = 0.22;
+
+      // Draw connections — dotted lines
+      for (let i = 0; i < sorted.length; i++) {
+        for (let j = i + 1; j < sorted.length; j++) {
+          const a = sorted[i], b = sorted[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dz = a.z - b.z;
+          const d3 = Math.sqrt(dx*dx + dy*dy + dz*dz);
+          if (d3 < LINK) {
+            const { px: ax, py: ay } = project(a, w, h);
+            const { px: bx, py: by } = project(b, w, h);
+            const depthAlpha = (a.z + b.z) * 0.5;
+            const alpha = (1 - d3 / LINK) * depthAlpha * 0.35;
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(bx, by);
+            ctx.strokeStyle = `rgba(0,229,195,${alpha})`;
+            ctx.lineWidth = depthAlpha * 0.6;
+            ctx.setLineDash([2, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        }
+      }
+
+      // Draw nodes — subtle dense field
+      sorted.forEach(n => {
+        const { px, py, scale } = project(n, w, h);
+        const pulse = n.glow ? 0.4 + 0.3 * Math.sin(t * 0.0008 + n.phase) : 0.3;
+        const r = n.r * scale * 1.8;
+        const alpha = 0.15 + n.z * 0.4;
+
+        if (n.glow && n.z > 0.4) {
+          const g = ctx.createRadialGradient(px, py, 0, px, py, r * 3.5);
+          g.addColorStop(0, `rgba(0,229,195,${pulse * alpha * 0.5})`);
+          g.addColorStop(1, "rgba(0,229,195,0)");
+          ctx.beginPath();
+          ctx.arc(px, py, r * 3.5, 0, Math.PI * 2);
+          ctx.fillStyle = g;
+          ctx.fill();
+        }
+
+        ctx.beginPath();
+        ctx.arc(px, py, Math.max(r, 0.5), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,229,195,${pulse * alpha})`;
+        ctx.fill();
+      });
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    raf = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "absolute", inset: 0,
+        width: "100%", height: "100%",
+        opacity: 0.75,
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
+
+function LoginStage({ onComplete }) {
+  const [typed, setTyped] = useState("");
+  const [phase, setPhase] = useState("idle");
+  const [btnActive, setBtnActive] = useState(false);
+  const [cursorX, setCursorX] = useState(0);
+  const [cursorY, setCursorY] = useState(0);
+  const [cursorGlow, setCursorGlow] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
+  const btnRef = useRef(null);
+  const pwRef = useRef(null);
+  const containerRef = useRef(null);
+
+  const getPos = (el) => {
+    if (!el || !containerRef.current) return null;
+    const er = el.getBoundingClientRect();
+    const cr = containerRef.current.getBoundingClientRect();
+    return {
+      x: er.left - cr.left + er.width * 0.3,
+      y: er.top  - cr.top  + er.height / 2 - 14,
+    };
+  };
+
+  useEffect(() => {
+    const timers = [];
+    const T = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+
+    // 1. Cursor appears immediately near top of form, centred
+    T(() => {
+      if (!containerRef.current) return;
+      const cr = containerRef.current.getBoundingClientRect();
+      setCursorX(cr.width * 0.45);
+      setCursorY(cr.height * 0.28);
+    }, 100);
+
+    // 2. Move to password box
+    T(() => {
+      if (pwRef.current && containerRef.current) {
+        const p = getPos(pwRef.current);
+        if (p) { setCursorX(p.x); setCursorY(p.y); }
+      }
+    }, 800);
+
+    // 3. Click the password box — glow, activate
+    T(() => {
+      setCursorGlow(true);
+      T(() => {
+        setCursorGlow(false);
+        setPhase("typing");
+        // 4. Type letter by letter
+        let i = 0;
+        const type = () => {
+          if (i < PASSWORD.length) {
+            setTyped(PASSWORD.slice(0, i + 1));
+            i++;
+            T(type, 80 + Math.random() * 60);
+          } else {
+            // 5. Pause then move to button
+            T(() => {
+              setPhase("moving");
+              if (btnRef.current && containerRef.current) {
+                const p = getPos(btnRef.current);
+                if (p) {
+                  setCursorX(p.x);
+                  setCursorY(p.y);
+                }
+              }
+              // 6. Click button
+              T(() => {
+                setCursorGlow(true);
+                setBtnActive(true);
+                T(() => {
+                  setCursorGlow(false);
+                  setFadeOut(true);
+                  T(() => onComplete(), 600);
+                }, 700);
+              }, 900);
+            }, 500);
+          }
+        };
+        type();
+      }, 450);
+    }, 1600);
+
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: "absolute", inset: 0,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: "0 32px",
+        animation: fadeOut ? "loginFadeOut 0.55s ease forwards" : "none",
+      }}
+    >
+      <MatrixCanvas />
+
+      {/* Logo */}
+      <div style={{ textAlign: "center", marginBottom: 44, position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 9, letterSpacing: "0.45em", color: C.cyan, opacity: 0.5, marginBottom: 12 }}>
+          THE DISTIL_AI_TION
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: "0.08em", textShadow: `0 0 24px ${C.cyan}50` }}>
+          VAULT ACCESS
+        </div>
+        <div style={{ width: 40, height: 1, background: `linear-gradient(90deg, transparent, ${C.cyan}80, transparent)`, margin: "14px auto 0" }} />
+      </div>
+
+      {/* Form */}
+      <div style={{ width: "100%", maxWidth: 300, position: "relative", zIndex: 1 }}>
+
+        {/* Username */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 8, letterSpacing: "0.3em", color: C.cyan, opacity: 0.55, marginBottom: 7 }}>
+            IDENTIFIER
+          </div>
+          <div style={{
+            background: "rgba(0,229,195,0.04)",
+            border: `1px solid ${C.cyan}30`,
+            borderRadius: 6, padding: "14px 18px",
+            fontSize: 17, color: C.cyan + "cc",
+            letterSpacing: "0.08em", fontFamily: "'Courier New', monospace",
+          }}>
+            AI_chemyst
+          </div>
+        </div>
+
+        {/* Password */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ fontSize: 8, letterSpacing: "0.3em", color: C.cyan, opacity: 0.55, marginBottom: 7 }}>
+            PASSPHRASE
+          </div>
+          <div
+            ref={pwRef}
+            style={{
+              background: phase !== "idle" ? "rgba(0,229,195,0.08)" : "rgba(0,229,195,0.04)",
+              border: `1px solid ${phase !== "idle" ? C.cyan + "80" : C.cyan + "30"}`,
+              borderRadius: 6, padding: "14px 18px",
+              fontSize: 17, letterSpacing: "0.06em",
+              fontFamily: "'Courier New', monospace",
+              display: "flex", alignItems: "center",
+              minHeight: 52,
+              boxShadow: phase !== "idle" ? `0 0 14px ${C.cyan}22, inset 0 0 8px ${C.cyan}08` : "none",
+              transition: "all 0.3s ease",
+            }}
+          >
+            <span style={{ color: C.cyan + "ee" }}>{typed}</span>
+            <span style={{
+              display: "inline-block", width: 2, height: 15,
+              background: C.cyan, marginLeft: 1,
+              animation: phase !== "idle" ? "blink 0.75s step-end infinite" : "none",
+              opacity: phase !== "idle" ? 1 : 0,
+              boxShadow: `0 0 6px ${C.cyan}`,
+              transition: "opacity 0.2s ease",
+            }} />
+          </div>
+        </div>
+
+        {/* Button */}
+        <button
+          ref={btnRef}
+          style={{
+            width: "100%", padding: "13px",
+            background: btnActive ? C.cyan : "transparent",
+            border: `1px solid ${btnActive ? C.cyan : C.cyan + "60"}`,
+            borderRadius: 6,
+            color: btnActive ? C.bg : C.cyan,
+            fontSize: 11, fontWeight: 700,
+            letterSpacing: "0.28em",
+            fontFamily: "'Courier New', monospace",
+            cursor: "default",
+            transition: "all 0.35s ease",
+            animation: btnActive ? "btnGlow 0.5s ease forwards" : "none",
+            transform: btnActive ? "scale(1.02)" : "scale(1)",
+          }}
+        >
+          LOG INTO VAULT
+        </button>
+
+        <div style={{ textAlign: "center", marginTop: 22, fontSize: 8, color: C.dimmer, letterSpacing: "0.18em" }}>
+          AUTHORISED ACCESS ONLY · AI_CHEMYST SYSTEMS
+        </div>
+      </div>
+
+      {/* Stylistic cursor — always mounted, starts at initial pos */}
+      <div style={{
+        position: "absolute",
+        left: cursorX,
+        top: cursorY,
+        transition: "left 0.75s cubic-bezier(0.4, 0, 0.2, 1), top 0.75s cubic-bezier(0.4, 0, 0.2, 1)",
+        pointerEvents: "none",
+        zIndex: 20,
+        outline: "none",
+        border: "none",
+        background: "transparent",
+        lineHeight: 0,
+      }}>
+        <svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", overflow: "visible" }}>
+          <defs>
+            <linearGradient id="cursorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#00e5c3" stopOpacity="1" />
+              <stop offset="60%" stopColor="#00b8a0" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#9d6fff" stopOpacity="0.85" />
+            </linearGradient>
+          </defs>
+          {/* Outer glow shape */}
+          <path
+            d="M4 2 L4 26 L10 20 L14 31 L18 29.5 L14 18.5 L22 18.5 Z"
+            fill="url(#cursorGrad)"
+            style={{
+              filter: cursorGlow
+                ? `drop-shadow(0 0 8px #00e5c3) drop-shadow(0 0 16px #00e5c3) drop-shadow(0 0 3px #9d6fff)`
+                : `drop-shadow(0 0 4px #00e5c390) drop-shadow(0 0 8px #00e5c340)`,
+              transition: "filter 0.25s ease",
+            }}
+          />
+          {/* Inner highlight stroke */}
+          <path
+            d="M4 2 L4 26 L10 20 L14 31 L18 29.5 L14 18.5 L22 18.5 Z"
+            fill="none"
+            stroke="rgba(255,255,255,0.35)"
+            strokeWidth="0.8"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ── root ───────────────────────────────────────────────────────────────────
+
+function App() {
+
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedOut, setLoggedOut] = useState(false);
+  const [stage, setStage] = useState(0);
+  const [surfaceIdx, setSurfaceIdx] = useState(0);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+
+  // Register logout handler for CompleteStage (avoids prop drilling through render)
+  useEffect(() => {
+    window.__onLogout = () => setLoggedOut(true);
+    return () => { delete window.__onLogout; };
+  }, []);
+
+  const handleRestart = () => {
+    setLoggedOut(false);
+    setLoggedIn(false);
+    setStage(0);
+    setSurfaceIdx(0);
+  };
+
+  const advance = () => {
+    if (stage === 4) {
+      if (surfaceIdx < SURFACES.length - 1) {
+        setSurfaceIdx(s => s + 1);
+      } else {
+        setStage(5);
+        setSurfaceIdx(0);
+      }
+    } else if (stage < 6) {
+      setStage(s => s + 1);
+    }
+    // stage 6 (CompleteStage): advance blocked — LOG OUT button handles exit
+  };
+
+  const retreat = () => {
+    if (stage === 4) {
+      if (surfaceIdx > 0) {
+        setSurfaceIdx(s => s - 1);
+      } else {
+        setStage(3);
+      }
+    } else if (stage === 5 && SURFACES.length > 0) {
+      setStage(4);
+      setSurfaceIdx(SURFACES.length - 1);
+    } else if (stage > 0) {
+      setStage(s => s - 1);
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    // Only trigger if horizontal swipe is dominant and long enough
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0 && stage !== 6) advance();
+      else if (dx > 0) retreat();
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  const ArrowBtn = ({ direction, onClick }) => {
+    const isLeft = direction === "left";
+    const disabled = isLeft && stage === 0 && surfaceIdx === 0;
+    const hidden = !isLeft && stage === 6;
+    if (hidden) return null;
+    return (
+      <button
+        onClick={(e) => { e.stopPropagation(); if (!disabled) onClick(); }}
+        style={{
+          position: "absolute",
+          top: "50%",
+          [isLeft ? "left" : "right"]: 8,
+          transform: "translateY(-50%)",
+          zIndex: 20,
+          background: "transparent",
+          border: "none",
+          padding: "14px 6px",
+          cursor: disabled ? "default" : "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: disabled ? 0.1 : 1,
+          transition: "opacity 0.3s ease",
+        }}
+      >
+        <svg width="18" height="32" viewBox="0 0 18 32" fill="none">
+          {isLeft ? (
+            <polyline
+              points="14,4 4,16 14,28"
+              stroke={C.cyan}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ filter: `drop-shadow(0 0 5px ${C.cyan}90)` }}
+            />
+          ) : (
+            <polyline
+              points="4,4 14,16 4,28"
+              stroke={C.cyan}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ filter: `drop-shadow(0 0 5px ${C.cyan}90)` }}
+            />
+          )}
+        </svg>
+      </button>
+    );
+  };
+
+  const isMain = loggedIn && !loggedOut;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0,
+      fontFamily: "'Courier New', monospace",
+      userSelect: "none",
+    }}>
+      <style>{css}</style>
+      {/* Global matrix canvas — fills entire viewport always */}
+      <MatrixCanvas />
+
+      {/* Glass plate — opalescent edges, decorative only */}
+      <div style={{
+        position: "fixed", top: 0, bottom: 0,
+        left: "50%", width: 422,
+        transform: "translateX(-50%)",
+        pointerEvents: "none", zIndex: 1,
+        background: "linear-gradient(180deg, rgba(0,200,255,0.09) 0%, rgba(180,80,255,0.04) 2%, transparent 7%, transparent 93%, rgba(255,120,200,0.04) 98%, rgba(0,229,195,0.09) 100%)",
+        borderLeft: "1.5px solid rgba(0,229,195,0.18)",
+        borderRight: "1.5px solid rgba(180,100,255,0.18)",
+        boxShadow: [
+          "8px 0 50px rgba(0,229,195,0.09)",
+          "-8px 0 50px rgba(180,100,255,0.09)",
+          "4px 0 20px rgba(0,150,255,0.07)",
+          "-4px 0 20px rgba(255,100,200,0.07)",
+          "2px 0 8px rgba(255,180,50,0.05)",
+          "-2px 0 8px rgba(255,180,50,0.05)",
+          "inset 5px 0 18px rgba(0,229,195,0.12)",
+          "inset -5px 0 18px rgba(180,100,255,0.12)",
+          "inset 2px 0 8px rgba(0,160,255,0.08)",
+          "inset -2px 0 8px rgba(255,80,180,0.08)",
+          "inset 1px 0 3px rgba(255,200,80,0.06)",
+          "inset -1px 0 3px rgba(255,200,80,0.06)",
+        ].join(", "),
+      }} />
+      {/* Second glass layer — top/bottom iridescent lip */}
+      <div style={{
+        position: "fixed", top: 0, bottom: 0,
+        left: "50%", width: 422,
+        transform: "translateX(-50%)",
+        pointerEvents: "none", zIndex: 1,
+        borderTop: "1.5px solid rgba(0,200,255,0.15)",
+        borderBottom: "1.5px solid rgba(255,120,200,0.15)",
+        boxShadow: "inset 0 4px 20px rgba(0,200,255,0.06), inset 0 -4px 20px rgba(255,120,200,0.06)",
+      }} />
+
+      {/* Scrollable centered column */}
+      <div style={{
+        position: "relative", zIndex: 2,
+        width: "100%", height: "100%",
+        overflowY: "auto",
+        display: "flex", justifyContent: "center",
+      }}>
+        {/* Login */}
+        {!loggedIn && (
+          <div style={{
+            maxWidth: 420, width: "100%",
+            position: "relative", minHeight: "100vh",
+          }}>
+            <LoginStage onComplete={() => setLoggedIn(true)} />
+          </div>
+        )}
+
+        {/* Logout */}
+        {loggedIn && loggedOut && (
+          <div style={{
+            maxWidth: 420, width: "100%",
+            position: "relative", minHeight: "100vh",
+          }}>
+            <LogoutPage onRestart={handleRestart} />
+          </div>
+        )}
+
+        {/* Main stages */}
+        {isMain && (
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              minHeight: "100vh",
+              width: "100%",
+              maxWidth: "420px",
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+              boxSizing: "border-box",
+            }}
+          >
+            {/* scanline */}
+            <div style={{
+              position: "fixed",
+              left: 0, right: 0, height: "60px",
+              background: "linear-gradient(transparent, rgba(0,229,195,0.04), transparent)",
+              animation: "scanline 5s linear infinite",
+              pointerEvents: "none",
+              zIndex: 50,
+            }} />
+
+            {/* Header + progress bar */}
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0,
+              zIndex: 10, padding: "14px 18px 0",
+            }}>
+              {/* Progress bar row */}
+              <div style={{
+                display: "flex", gap: 3, marginBottom: 8,
+              }}>
+                {[...Array(7)].map((_, i) => (
+                  <div key={i} style={{
+                    flex: 1,
+                    height: 3,
+                    borderRadius: 2,
+                    background: i === stage
+                      ? "rgba(255,255,255,0.75)"
+                      : i < stage
+                      ? "rgba(255,255,255,0.28)"
+                      : "rgba(255,255,255,0.1)",
+                    transition: "all 0.4s ease",
+                  }} />
+                ))}
+              </div>
+              {/* Label row */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 8, letterSpacing: "0.3em", color: "rgba(255,255,255,0.42)" }}>AI_CHEMYST</span>
+                <span style={{ fontSize: 7, letterSpacing: "0.2em", color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>The distil_AI_tion</span>
+                <span style={{ fontSize: 8, letterSpacing: "0.2em", color: "rgba(255,255,255,0.42)" }}>{stage + 1} / 7</span>
+              </div>
+            </div>
+
+            {/* Nav arrows */}
+            <ArrowBtn direction="left"  onClick={retreat} />
+            <ArrowBtn direction="right" onClick={advance} />
+
+            {/* Main content */}
+            <div style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "64px 42px 36px",
+              minHeight: "100vh",
+              boxSizing: "border-box",
+            }}>
+              {stage === 0 && <IntroStage onContinue={advance} />}
+              {stage === 1 && <ModelsStage onContinue={advance} />}
+              {stage === 2 && <HarnessesStage onContinue={advance} />}
+              {stage === 3 && <SurfacesStage onContinue={advance} />}
+              {stage === 4 && (
+                <FeaturesStage
+                  surface={SURFACES[surfaceIdx]}
+                  idx={surfaceIdx}
+                  total={SURFACES.length}
+                  onNext={() => setSurfaceIdx(s => s + 1)}
+                  onContinue={() => { setStage(5); setSurfaceIdx(0); }}
+                />
+              )}
+              {stage === 5 && <InstructionsStage onContinue={advance} />}
+              {stage === 6 && <CompleteStage />}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+    // Mount the app
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
+</body>
+</html>
